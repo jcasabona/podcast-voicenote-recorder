@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Podcast Voicenote Recorder for Gravity Forms
  * Description: Adds a browser-based audio recording field to Gravity Forms, letting listeners record and submit voice messages that are stored as form entries.
- * Version: 3.0.0
+ * Version: 3.0.1
  * Author: Joe Casabona
  * License: GPL2
  * Text Domain: podcast-voicenote-recorder
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'PVR_VERSION', '3.0.0' );
+define( 'PVR_VERSION', '3.0.1' );
 define( 'PVR_PLUGIN_FILE', __FILE__ );
 define( 'PVR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PVR_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
