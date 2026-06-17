@@ -8,14 +8,17 @@
 .pvr-recorder {
 	--pvr-primary: #082c45;
 	--pvr-accent: #f7d677;
-	max-width: 32rem;
-	margin: 0 auto;
-	padding: 1.5rem;
-	border-radius: 0.75rem;
+	width: 100%;
+	margin: 0;
+	padding: 2rem 1.5rem 1.75rem;
+	border-radius: 1rem;
 	background-color: var( --pvr-primary );
+	/* Subtle top sheen for a little depth without extra assets. */
+	background-image: radial-gradient( circle at 50% 0%, rgba( 255, 255, 255, 0.08 ), rgba( 255, 255, 255, 0 ) 65% );
 	color: var( --pvr-accent );
 	text-align: center;
 	box-sizing: border-box;
+	box-shadow: 0 10px 30px rgba( 8, 44, 69, 0.18 );
 }
 
 .pvr-recorder * {
@@ -31,19 +34,19 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	height: 50px;
-	margin-bottom: 0.5rem;
+	height: 44px;
+	margin-bottom: 0.25rem;
 }
 
 .pvr-bar {
 	display: inline-block;
-	width: 4px;
-	height: 5px;
-	margin: 0 2px;
+	width: 5px;
+	height: 12px;
+	margin: 0 3px;
 	border-radius: 9999px;
 	background-color: var( --pvr-accent );
-	transform-origin: bottom;
-	opacity: 0.85;
+	transform-origin: center;
+	opacity: 0.55;
 }
 
 .pvr-recording .pvr-bar {
@@ -63,27 +66,38 @@
 
 .pvr-not-recording .pvr-bar {
 	animation: none;
-	height: 5px;
+	height: 12px;
 }
 
 @keyframes pvr-pulse {
-	0% { transform: scaleY( 0.1 ); }
+	0% { transform: scaleY( 0.25 ); }
 	100% { transform: scaleY( 1 ); }
 }
 
 /* Status + timer ---------------------------------------------------------- */
 .pvr-status {
-	font-size: 1rem;
-	font-weight: 600;
-	margin: 0.5rem 0 0.25rem;
+	font-size: 1.05rem;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+	margin: 0.5rem 0 0.15rem;
 	color: var( --pvr-accent );
 }
 
 .pvr-timer {
 	font-family: monospace;
-	font-size: 1.5rem;
-	margin: 0 0 1rem;
+	font-size: 1.75rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	margin: 0 0 1.25rem;
 	color: var( --pvr-accent );
+	opacity: 0.9;
+}
+
+.pvr-hint {
+	font-size: 0.8rem;
+	margin: 0.85rem 0 0;
+	color: var( --pvr-accent );
+	opacity: 0.65;
 }
 
 /* Controls ---------------------------------------------------------------- */
@@ -122,8 +136,21 @@
 }
 
 .pvr-record-button.pvr-is-recording {
-	background-color: #d32f2f;
+	background-color: #e23b3b;
 	color: #fff;
+	animation: pvr-ring 1.5s ease-out infinite;
+}
+
+@keyframes pvr-ring {
+	0% { box-shadow: 0 0 0 0 rgba( 226, 59, 59, 0.5 ); }
+	100% { box-shadow: 0 0 0 18px rgba( 226, 59, 59, 0 ); }
+}
+
+@media ( prefers-reduced-motion: reduce ) {
+	.pvr-recording .pvr-bar,
+	.pvr-record-button.pvr-is-recording {
+		animation: none;
+	}
 }
 
 .pvr-record-button svg {
