@@ -1,91 +1,89 @@
-# Podcast Voicenote Recorder Plugin
+# Podcast Voicenote Recorder for Gravity Forms
 
-This is a custom WordPress plugin designed to allow podcast listeners to record and submit voice messages directly through a frontend interface. Files are securely saved to your WordPress uploads directory, and an email notification is sent upon every successful submission.
+A Gravity Forms Add-On that adds a **Voice Recorder** field. Visitors record an
+audio message in their browser (no plugins, no app) and submit it as part of any
+Gravity Forms form. The recording is stored with the entry, so you get all of
+Gravity Forms' entry management, notifications, exports, and conditional logic
+for free.
 
-## Features
+## Requirements
 
-* **Custom Branding:** Uses your preferred color palette (`#082C45`, `#F7D677`, `#F7F4EB`).
-
-* **Max Recording Duration:** Enforces a 5-minute (300 seconds) limit on all frontend recordings.
-
-* **Admin Dashboard:** Provides a dedicated "Voicenote Submissions" page to review, play, download, and delete submitted audio files.
-
-* **Email Notification:** Sends an email to the site administrator (`admin_email`) upon successful file upload.
-
-* **Rate Limiting:** Securely limits submissions to 5 per day per IP address, using the WordPress Options API.
+* WordPress 5.8+
+* PHP 7.2+
+* **Gravity Forms 2.5+** (this is an add-on and will not do anything without it)
 
 ## Installation
 
-1. **Create Plugin Folder:** In your local WordPress development environment, create a new folder named `podcast-voicenote-recorder` inside `wp-content/plugins/`.
-
-2. **Add Files:** Place the two required PHP files inside this folder:
-
-   * `podcast-voicenote-recorder.php` (Main plugin file and frontend logic)
-
-   * `voicenotes-upload-handler.php` (Backend processing, file saving, rate limiting, and email)
-
-3. **Zip and Upload (Optional):** Compress the `podcast-voicenote-recorder` folder into a `.zip` file. You can then upload and install this zip file directly via the WordPress admin dashboard (Plugins -> Add New -> Upload Plugin).
-
-4. **Activate:** Activate the **Podcast Voicenote Recorder** plugin.
+1. Upload the `podcast-voicenote-recorder` folder to `wp-content/plugins/`
+   (or install the zipped plugin via **Plugins → Add New → Upload Plugin**).
+2. Activate **Podcast Voicenote Recorder for Gravity Forms**.
+3. Make sure Gravity Forms is installed and active. If it isn't, an admin
+   notice will remind you.
 
 ## Usage
 
-### 1. Embedding the Recorder
+### Add the field to a form
 
-To display the voice recorder on any page or post, simply use the following shortcode in a Classic Editor or Shortcode Block:
+1. Edit a form in Gravity Forms.
+2. In the form editor, open the **Advanced Fields** group and add the
+   **Voice Recorder** field.
+3. Configure the label, description, whether it's required, and conditional
+   logic as you would any other field.
+4. Embed the form on a page as usual (`[gravityform id="1" ...]` or the block).
 
-[podcast_voicenote_recorder]
+When a visitor submits, the recording is saved to the form's upload directory
+and the entry stores a link to the audio file.
 
+### Review submissions
 
-### 2. Managing Submissions
+Submissions appear as normal Gravity Forms entries (**Forms → Entries**):
 
-After activation, a new menu item will appear in your WordPress dashboard sidebar:
+* The entries list shows a **Listen** link.
+* The single entry view embeds an audio player plus a download link.
+* Use the `{Voice Recorder:ID}` merge tag in notifications and confirmations to
+  include the recording URL.
 
-* Go to **Dashboard Menu** -> **Voicenotes**.
+## Settings
 
-On this page, you can:
+Configure global defaults under **Forms → Settings → Voicenote Recorder**:
 
-* View the Submission Date (corrected to your site's timezone).
+| Setting | Default | Description |
+| :--- | :--- | :--- |
+| Maximum recording length | 300 seconds | Recording auto-stops at this length. |
+| Maximum file size | 50 MB | Larger submissions are rejected. |
+| Daily per-IP limit | enabled, 5/day | Blocks repeat submissions from the same IP. |
+| Background / accent colors | `#082C45` / `#F7D677` | Recorder UI colors. |
 
-* Listen to the audio file directly in the browser.
+> The maximum file size also depends on your server's `upload_max_filesize` and
+> `post_max_size` PHP settings — set those at least as high as your limit.
 
-* Download the `.webm` file.
+## How it works
 
-* Delete the file from the server.
+* The **Voice Recorder** field (`GF_Field_Voicenote`) renders a self-contained
+  recorder UI and a hidden file input.
+* `assets/js/recorder.js` uses the `MediaRecorder` API to capture WebM audio,
+  then injects the result into the hidden file input via the `DataTransfer`
+  API, so the recording submits through Gravity Forms' standard file pipeline.
+* On submission the field validates size/type and moves the file into the
+  form's upload directory using `GFFormsModel::get_file_upload_path()`, storing
+  the URL as the entry value.
+* Rate limiting is enforced via the `gform_validation` filter and recorded on
+  `gform_after_submission` (per IP, per day).
 
-## Configuration Details
+## File overview
 
-### File Storage Location
+| File | Role |
+| :--- | :--- |
+| `podcast-voicenote-recorder.php` | Plugin bootstrap; loads the add-on and registers the field on `gform_loaded`. |
+| `includes/class-pvr-addon.php` | `GFAddOn` subclass: settings, asset enqueuing, rate limiting. |
+| `includes/class-gf-field-voicenote.php` | `GF_Field` subclass: the Voice Recorder field, validation, storage, and display. |
+| `assets/js/recorder.js` | Browser recording logic. |
+| `assets/css/recorder.css` | Recorder UI styles (no external dependencies). |
 
-All successfully uploaded files are saved to the following secure location:
+## Notes & limitations
 
-`wp-content/uploads/podcast_voicenotes/`
-
-### Rate Limiting
-
-The rate limiting is hardcoded as follows:
-
-* **Limit:** 5 submissions per day.
-
-* **Tracking:** Tracks by the user's IP address.
-
-* **Storage:** The submission counts are stored securely in your database using the WordPress `options` table (`pvr_rate_limit_submissions` key).
-
-If a user hits the limit, the submission will be blocked, and the frontend will display an error message.
-
-### Troubleshooting: Server Configuration
-
-If you experience "400 Bad Request" or file size errors when submitting a recording, you must check your server's PHP configuration:
-
-1. `upload_max_filesize`
-
-2. `post_max_size`
-
-These values must be set higher than the maximum expected file size (e.g., set both to `32M`).
-
-## Technical File Overview
-
-| File | Role | Key Functions | 
-| :--- | :--- | :--- | 
-| `podcast-voicenote-recorder.php` | Main Plugin / Frontend | Shortcode rendering, UI, JavaScript logic (Max Duration), Admin Page (`pvr_voicenote_page`, `pvr_handle_delete_voicenote`). | 
-| `voicenotes-upload-handler.php` | Backend Endpoint | File saving, Rate Limit Check/Update, Email notification (`wp_mail`). |
+* Browser recording requires a modern browser (Chrome, Firefox, Edge, Safari)
+  served over **HTTPS** (a `getUserMedia` requirement).
+* Best used on single-page forms. Carrying a recorded file across the pages of
+  a multi-page form is not yet supported.
+* Audio is captured as WebM, which is what the field accepts and stores.
