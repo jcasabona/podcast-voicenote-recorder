@@ -135,6 +135,8 @@ class GF_Field_Voicenote extends GF_Field {
 
 		$disabled = $this->is_form_editor() ? 'disabled' : '';
 
+		$max_label = sprintf( '%d:%02d', (int) floor( $max_seconds / 60 ), $max_seconds % 60 );
+
 		ob_start();
 		?>
 		<div class="ginput_container ginput_container_voicenote">
@@ -161,6 +163,16 @@ class GF_Field_Voicenote extends GF_Field {
 						<svg class="pvr-icon-stop pvr-hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="7" width="10" height="10" rx="2" ry="2"/></svg>
 					</button>
 				</div>
+
+				<p class="pvr-hint">
+					<?php
+					printf(
+						/* translators: %s: maximum recording length, formatted as m:ss. */
+						esc_html__( 'Tap the mic to start · max length %s', 'podcast-voicenote-recorder' ),
+						esc_html( $max_label )
+					);
+					?>
+				</p>
 
 				<div class="pvr-playback pvr-hidden">
 					<audio class="pvr-audio" controls preload="metadata"></audio>

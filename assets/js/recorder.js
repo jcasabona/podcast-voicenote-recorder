@@ -32,6 +32,7 @@
 		var micIcon    = wrapper.querySelector( '.pvr-icon-mic' );
 		var stopIcon   = wrapper.querySelector( '.pvr-icon-stop' );
 		var waveform   = wrapper.querySelector( '.pvr-waveform' );
+		var hintEl     = wrapper.querySelector( '.pvr-hint' );
 
 		if ( ! fileInput || ! recordBtn ) {
 			return;
@@ -114,6 +115,9 @@
 			waveform.classList.add( 'pvr-not-recording' );
 			waveform.classList.remove( 'pvr-recording' );
 			playback.classList.add( 'pvr-hidden' );
+			if ( hintEl ) {
+				hintEl.classList.remove( 'pvr-hidden' );
+			}
 			if ( messageEl ) {
 				messageEl.classList.add( 'pvr-hidden' );
 			}
@@ -155,6 +159,9 @@
 
 				mediaRecorder.start();
 				startTimer();
+				if ( hintEl ) {
+					hintEl.classList.add( 'pvr-hidden' );
+				}
 				statusEl.textContent = 'Recording… click to stop.';
 				recordBtn.classList.add( 'pvr-is-recording' );
 				micIcon.classList.add( 'pvr-hidden' );
