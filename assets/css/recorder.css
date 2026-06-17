@@ -1,0 +1,183 @@
+/**
+ * Podcast Voicenote Recorder field styles.
+ *
+ * Scoped to .pvr-recorder. Colors are driven by CSS custom properties set
+ * inline from the add-on settings (--pvr-primary, --pvr-accent).
+ */
+
+.pvr-recorder {
+	--pvr-primary: #082c45;
+	--pvr-accent: #f7d677;
+	max-width: 32rem;
+	margin: 0 auto;
+	padding: 1.5rem;
+	border-radius: 0.75rem;
+	background-color: var( --pvr-primary );
+	color: var( --pvr-accent );
+	text-align: center;
+	box-sizing: border-box;
+}
+
+.pvr-recorder * {
+	box-sizing: border-box;
+}
+
+.pvr-hidden {
+	display: none !important;
+}
+
+/* Waveform ---------------------------------------------------------------- */
+.pvr-waveform {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 50px;
+	margin-bottom: 0.5rem;
+}
+
+.pvr-bar {
+	display: inline-block;
+	width: 4px;
+	height: 5px;
+	margin: 0 2px;
+	border-radius: 9999px;
+	background-color: var( --pvr-accent );
+	transform-origin: bottom;
+	opacity: 0.85;
+}
+
+.pvr-recording .pvr-bar {
+	animation: pvr-pulse 0.5s ease-in-out infinite alternate;
+}
+
+.pvr-recording .pvr-bar:nth-child( 1 ) { animation-delay: 0s; height: 10px; }
+.pvr-recording .pvr-bar:nth-child( 2 ) { animation-delay: 0.1s; height: 15px; }
+.pvr-recording .pvr-bar:nth-child( 3 ) { animation-delay: 0.2s; height: 20px; }
+.pvr-recording .pvr-bar:nth-child( 4 ) { animation-delay: 0.3s; height: 18px; }
+.pvr-recording .pvr-bar:nth-child( 5 ) { animation-delay: 0.4s; height: 25px; }
+.pvr-recording .pvr-bar:nth-child( 6 ) { animation-delay: 0.5s; height: 12px; }
+.pvr-recording .pvr-bar:nth-child( 7 ) { animation-delay: 0.6s; height: 30px; }
+.pvr-recording .pvr-bar:nth-child( 8 ) { animation-delay: 0.7s; height: 16px; }
+.pvr-recording .pvr-bar:nth-child( 9 ) { animation-delay: 0.8s; height: 22px; }
+.pvr-recording .pvr-bar:nth-child( 10 ) { animation-delay: 0.9s; height: 11px; }
+
+.pvr-not-recording .pvr-bar {
+	animation: none;
+	height: 5px;
+}
+
+@keyframes pvr-pulse {
+	0% { transform: scaleY( 0.1 ); }
+	100% { transform: scaleY( 1 ); }
+}
+
+/* Status + timer ---------------------------------------------------------- */
+.pvr-status {
+	font-size: 1rem;
+	font-weight: 600;
+	margin: 0.5rem 0 0.25rem;
+	color: var( --pvr-accent );
+}
+
+.pvr-timer {
+	font-family: monospace;
+	font-size: 1.5rem;
+	margin: 0 0 1rem;
+	color: var( --pvr-accent );
+}
+
+/* Controls ---------------------------------------------------------------- */
+.pvr-controls {
+	display: flex;
+	justify-content: center;
+}
+
+.pvr-record-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 72px;
+	height: 72px;
+	padding: 0;
+	border: none;
+	border-radius: 9999px;
+	cursor: pointer;
+	background-color: var( --pvr-accent );
+	color: var( --pvr-primary );
+	box-shadow: 0 4px 12px rgba( 0, 0, 0, 0.25 );
+	transition: transform 0.15s ease, background-color 0.2s ease;
+}
+
+.pvr-record-button:hover {
+	transform: scale( 1.05 );
+}
+
+.pvr-record-button:active {
+	transform: scale( 0.95 );
+}
+
+.pvr-record-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.pvr-record-button.pvr-is-recording {
+	background-color: #d32f2f;
+	color: #fff;
+}
+
+.pvr-record-button svg {
+	width: 32px;
+	height: 32px;
+}
+
+/* Playback ---------------------------------------------------------------- */
+.pvr-playback {
+	margin-top: 1.5rem;
+	padding-top: 1rem;
+	border-top: 1px solid rgba( 255, 255, 255, 0.15 );
+}
+
+.pvr-audio {
+	width: 100%;
+	border-radius: 0.5rem;
+}
+
+.pvr-new-button {
+	display: inline-block;
+	margin-top: 0.75rem;
+	padding: 0.5rem 1rem;
+	border: none;
+	border-radius: 0.5rem;
+	cursor: pointer;
+	background-color: rgba( 255, 255, 255, 0.9 );
+	color: #333;
+	font-weight: 600;
+}
+
+.pvr-new-button:hover {
+	background-color: #fff;
+}
+
+/* Messages ---------------------------------------------------------------- */
+.pvr-message {
+	margin-top: 1rem;
+	padding: 0.75rem;
+	border-radius: 0.5rem;
+	font-weight: 500;
+}
+
+.pvr-message.pvr-error {
+	background-color: #fde8e8;
+	color: #9b1c1c;
+}
+
+.pvr-message.pvr-success {
+	background-color: #def7ec;
+	color: #03543f;
+}
+
+/* Editor preview ---------------------------------------------------------- */
+.pvr-editor-preview .pvr-record-button {
+	cursor: default;
+}
