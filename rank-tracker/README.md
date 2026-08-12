@@ -5,11 +5,6 @@ checks where the show ranks for a set of target keywords on **Apple Podcasts**
 and **Spotify** each week, stores the history, and shows a dashboard — replacing
 the tracking function of Ausha PSO / PodSEO at **$0/mo** on Netlify's free tier.
 
-> **Scope note:** this lives in the `rank-tracker/` subfolder of the
-> `podcast-voicenote-recorder` repo so it stays fully separate from the
-> WordPress plugin at the repo root. When you create the Netlify site, set the
-> **Base directory** to `rank-tracker` (see setup below).
-
 Non-goals (by design): search-volume estimates, difficulty scores, metadata
 scoring, Amazon Music (no public API), social clips. Optimization strategy stays
 in the `podcast-seo` skill.
@@ -19,8 +14,8 @@ in the `podcast-seo` skill.
 ## Architecture
 
 ```
-rank-tracker/
-├─ netlify.toml                     # base=rank-tracker; functions + build config
+.
+├─ netlify.toml                     # functions + build config
 ├─ config/keywords.json             # keywords + show identity + competitors
 ├─ public/index.html                # dashboard (static, fetches /api/*)
 └─ netlify/
@@ -75,10 +70,9 @@ The shared logic in `netlify/lib/` (`tracker.ts`, `apple.ts`, `spotify.ts`,
 
 ### 1. Create the Netlify site
 
-- Connect this repo in Netlify.
-- **Set Base directory to `rank-tracker`.** This makes Netlify read
-  `rank-tracker/netlify.toml`, install deps from `rank-tracker/package.json`, and
-  find the functions and `public/` dashboard.
+- Connect this repo in Netlify. No base directory needed — the repo root is the
+  deploy root, so Netlify reads `netlify.toml`, installs from `package.json`, and
+  finds the functions and `public/` dashboard automatically.
 - Netlify Blobs is enabled automatically for deployed functions — no setup.
 
 ### 2. Create a Spotify developer app (5 min)
@@ -235,7 +229,6 @@ same limitation the paid tools operate under.
 ## Development
 
 ```bash
-cd rank-tracker
 npm install
 npm run typecheck      # tsc --noEmit
 npm run dev            # netlify dev (needs the Netlify CLI + env vars)

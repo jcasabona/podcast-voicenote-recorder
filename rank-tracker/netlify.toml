@@ -1,9 +1,8 @@
 # Netlify config for the Podcast Rank Tracker.
 #
-# This project lives in the `rank-tracker/` subfolder of the repo. When you
-# create the Netlify site, set the site's **Base directory** to `rank-tracker`
-# so Netlify reads this file and installs dependencies from this folder.
-# All paths below are relative to that base directory.
+# This repo is the deploy root — connect it in Netlify with no base directory
+# and Netlify reads this file, installs from package.json, and finds the
+# functions and the public/ dashboard directly.
 
 [build]
   publish = "public"
