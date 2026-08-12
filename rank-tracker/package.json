@@ -1,0 +1,19 @@
+{
+  "name": "podcast-rank-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Self-hosted podcast keyword rank tracker for Streamlined Solopreneur (Apple Podcasts + Spotify), running on Netlify.",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "dev": "netlify dev"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0",
+    "@netlify/functions": "^2.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.4"
+  }
+}

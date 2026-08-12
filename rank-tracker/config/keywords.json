@@ -1,0 +1,25 @@
+{
+  "_comment": "Edit this file to configure the tracker. Resolve appleCollectionId and spotifyShowId once (see README > One-time setup, or hit /.netlify/functions/resolve-ids on the deployed site). Replace the placeholder keywords with the 10 targets from the podcast-seo skill (Phase 1B). The tracker works with any number of keywords.",
+  "show": {
+    "name": "Streamlined Solopreneur",
+    "publisher": "Joe Casabona",
+    "feedUrl": "https://feeds.transistor.fm/streamlined",
+    "appleCollectionId": "RESOLVE_AT_SETUP",
+    "spotifyShowId": "RESOLVE_AT_SETUP"
+  },
+  "keywords": [
+    "solopreneur",
+    "solopreneur systems",
+    "solopreneur podcast",
+    "productivity for solopreneurs",
+    "systems for creators",
+    "podcasting for business",
+    "content systems",
+    "work life balance entrepreneur",
+    "automations for small business",
+    "solo business"
+  ],
+  "competitors": [
+    { "name": "PLACEHOLDER — pick 3-5 competitor shows", "appleCollectionId": "", "spotifyShowId": "" }
+  ]
+}

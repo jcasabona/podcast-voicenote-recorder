@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Podcast Rank Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geologica:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --navy: #082c45;
+        --ink: #1b2f3d;
+        --cream: #f7f4eb;
+        --paper: #fbf8f0;
+        --gold: #f7d677;
+        --up: #1f7a4d;
+        --down: #b23b3b;
+        --muted: #7a8894;
+        --line: #e6ddc9;
+        --shadow: 0 1px 2px rgba(8, 44, 69, 0.06), 0 8px 24px rgba(8, 44, 69, 0.06);
+        font-family: "Geologica", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-weight: 400;
+        line-height: 1.45;
+        -webkit-font-smoothing: antialiased;
+      }
+      header {
+        background: var(--navy);
+        color: var(--cream);
+        padding: 28px 24px;
+      }
+      .wrap { max-width: 1080px; margin: 0 auto; }
+      header .wrap { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+      header h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+      header h1 .accent { color: var(--gold); }
+      .updated { font-size: 13px; color: #b9c6d1; }
+      main { padding: 24px; }
+      .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+      .seg { display: inline-flex; background: var(--cream); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+      .seg button {
+        border: 0; background: transparent; color: var(--ink); font: inherit; font-size: 14px;
+        padding: 6px 16px; border-radius: 999px; cursor: pointer;
+      }
+      .seg button[aria-pressed="true"] { background: var(--navy); color: var(--cream); font-weight: 600; }
+      .btn-refresh {
+        margin-left: auto; border: 1px solid var(--line); background: var(--cream); color: var(--ink);
+        font: inherit; font-size: 13px; padding: 7px 14px; border-radius: 8px; cursor: pointer;
+      }
+      section.card {
+        background: #fff; border: 1px solid var(--line); border-radius: 14px;
+        box-shadow: var(--shadow); overflow: hidden; margin-bottom: 24px;
+      }
+      section.card > h2 {
+        margin: 0; padding: 16px 20px; font-size: 15px; font-weight: 600;
+        border-bottom: 1px solid var(--line); background: var(--cream);
+      }
+      .table-scroll { overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; font-size: 14px; }
+      th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+      th { font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+      tbody tr:last-child td { border-bottom: 0; }
+      tbody tr:hover { background: #fbfaf5; }
+      td.keyword { white-space: normal; font-weight: 500; min-width: 180px; }
+      .pos { font-variant-numeric: tabular-nums; font-weight: 600; }
+      .pos.unranked { color: var(--muted); font-weight: 400; }
+      .delta { font-variant-numeric: tabular-nums; font-size: 13px; }
+      .delta.up { color: var(--up); }
+      .delta.down { color: var(--down); }
+      .delta.flat { color: var(--muted); }
+      .spark { color: var(--navy); display: block; }
+      .muted { color: var(--muted); }
+      .empty { text-align: center; padding: 48px 24px; color: var(--muted); }
+      .empty code { background: var(--cream); padding: 2px 6px; border-radius: 5px; color: var(--ink); }
+      footer { max-width: 1080px; margin: 0 auto; padding: 8px 24px 40px; color: var(--muted); font-size: 12px; }
+      a { color: var(--navy); }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap">
+        <h1><span class="accent">◆</span> <span id="show-name">Podcast Rank Tracker</span></h1>
+        <div class="updated" id="updated">Loading…</div>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <div class="toolbar">
+        <div class="seg" role="group" aria-label="Platform">
+          <button id="tab-apple" aria-pressed="true">Apple Podcasts</button>
+          <button id="tab-spotify" aria-pressed="false">Spotify</button>
+        </div>
+        <button class="btn-refresh" id="refresh">Refresh</button>
+      </div>
+
+      <div id="content"></div>
+    </main>
+
+    <footer>
+      Positions approximate in-app search rank (the platforms layer on behavioral
+      and personalized signals that public APIs don't expose). Same limitation the
+      paid tools work under. Data: iTunes Search API + Spotify Web API.
+    </footer>
+
+    <script>
+      const state = { platform: "apple", latest: null, previousRunAt: null, history: {} };
+
+      const $ = (id) => document.getElementById(id);
+
+      function fmtPos(pos, scanned) {
+        if (pos == null) return { text: (scanned ? scanned + "+" : "unranked"), cls: "unranked" };
+        return { text: "#" + pos, cls: "" };
+      }
+
+      function computeDelta(cur, prev) {
+        if (cur == null && prev == null) return { sym: "—", cls: "flat", title: "no data" };
+        if (cur != null && prev == null) return { sym: "▲ new", cls: "up", title: "newly ranked" };
+        if (cur == null && prev != null) return { sym: "▼ out", cls: "down", title: "dropped out of range" };
+        const d = prev - cur; // positive == improved (rank number got smaller)
+        if (d > 0) return { sym: "▲ " + d, cls: "up", title: "up " + d };
+        if (d < 0) return { sym: "▼ " + -d, cls: "down", title: "down " + -d };
+        return { sym: "—", cls: "flat", title: "no change" };
+      }
+
+      function sparkline(series) {
+        const w = 120, h = 28, pad = 4;
+        const pts = series.map((p, i) => ({ i, pos: p.position })).filter((p) => p.pos != null);
+        if (pts.length === 0) return '<span class="muted">—</span>';
+        const positions = pts.map((p) => p.pos);
+        const min = Math.min(...positions), max = Math.max(...positions);
+        const span = max - min || 1;
+        const n = series.length;
+        const x = (i) => pad + (n <= 1 ? (w - 2 * pad) / 2 : (i / (n - 1)) * (w - 2 * pad));
+        const y = (pos) => pad + ((pos - min) / span) * (h - 2 * pad); // best (min) at top
+        const d = pts.map((p, k) => (k ? "L" : "M") + x(p.i).toFixed(1) + " " + y(p.pos).toFixed(1)).join(" ");
+        const last = pts[pts.length - 1];
+        return (
+          '<svg class="spark" viewBox="0 0 ' + w + " " + h + '" width="' + w + '" height="' + h +
+          '" role="img" aria-label="trend"><path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+          '<circle cx="' + x(last.i).toFixed(1) + '" cy="' + y(last.pos).toFixed(1) + '" r="2.4" fill="currentColor"/></svg>'
+        );
+      }
+
+      function resultFor(keyword, platform) {
+        return state.latest.results.find((r) => r.keyword === keyword && r.platform === platform);
+      }
+
+      function seriesFor(keyword, platform) {
+        const h = state.history[keyword];
+        if (!h) return [];
+        return (h[platform] || []).slice();
+      }
+
+      function competitorNames() {
+        const names = new Set();
+        for (const r of state.latest.results) {
+          for (const name of Object.keys(r.competitorPositions || {})) names.add(name);
+        }
+        return [...names];
+      }
+
+      function keywordList() {
+        const seen = [];
+        for (const r of state.latest.results) if (!seen.includes(r.keyword)) seen.push(r.keyword);
+        return seen;
+      }
+
+      function renderMainTable(p) {
+        const rows = keywordList().map((k) => {
+          const res = resultFor(k, p);
+          const series = seriesFor(k, p);
+          const cur = res ? res.position : (series.length ? series[series.length - 1].position : null);
+          const scanned = res ? res.scanned : null;
+          const prev = series.length >= 2 ? series[series.length - 2].position : null;
+          const positions = series.map((s) => s.position).filter((v) => v != null);
+          const best = positions.length ? Math.min(...positions) : (cur != null ? cur : null);
+          const pos = fmtPos(cur, scanned);
+          const delta = computeDelta(cur, prev);
+          return (
+            "<tr><td class='keyword'>" + escapeHtml(k) + "</td>" +
+            "<td class='pos " + pos.cls + "'>" + pos.text + "</td>" +
+            "<td class='delta " + delta.cls + "' title='" + delta.title + "'>" + delta.sym + "</td>" +
+            "<td class='pos'>" + (best != null ? "#" + best : "—") + "</td>" +
+            "<td>" + sparkline(series) + "</td></tr>"
+          );
+        });
+        return (
+          "<section class='card'><h2>Keyword ranks — " + (p === "apple" ? "Apple Podcasts" : "Spotify") + "</h2>" +
+          "<div class='table-scroll'><table><thead><tr><th>Keyword</th><th>Position</th><th>Δ vs last run</th><th>Best ever</th><th>Trend</th></tr></thead><tbody>" +
+          rows.join("") + "</tbody></table></div></section>"
+        );
+      }
+
+      function renderCompetitorTable(p) {
+        const comps = competitorNames();
+        if (comps.length === 0) {
+          return (
+            "<section class='card'><h2>Competitors — " + (p === "apple" ? "Apple Podcasts" : "Spotify") + "</h2>" +
+            "<div class='empty'>No competitors configured. Add shows to <code>competitors</code> in <code>config/keywords.json</code>.</div></section>"
+          );
+        }
+        const head =
+          "<tr><th>Keyword</th><th>" + escapeHtml(state.latest._showName || "Our show") + "</th>" +
+          comps.map((c) => "<th>" + escapeHtml(c) + "</th>").join("") + "</tr>";
+        const rows = keywordList().map((k) => {
+          const res = resultFor(k, p);
+          const ours = res ? fmtPos(res.position, res.scanned) : { text: "—", cls: "unranked" };
+          const cells = comps.map((c) => {
+            const v = res && res.competitorPositions ? res.competitorPositions[c] : undefined;
+            const f = fmtPos(v == null ? null : v, res ? res.scanned : null);
+            return "<td class='pos " + f.cls + "'>" + f.text + "</td>";
+          });
+          return (
+            "<tr><td class='keyword'>" + escapeHtml(k) + "</td>" +
+            "<td class='pos " + ours.cls + "'>" + ours.text + "</td>" + cells.join("") + "</tr>"
+          );
+        });
+        return (
+          "<section class='card'><h2>Competitors — " + (p === "apple" ? "Apple Podcasts" : "Spotify") + "</h2>" +
+          "<div class='table-scroll'><table><thead>" + head + "</thead><tbody>" + rows.join("") + "</tbody></table></div></section>"
+        );
+      }
+
+      function render() {
+        const p = state.platform;
+        $("content").innerHTML = renderMainTable(p) + renderCompetitorTable(p);
+      }
+
+      function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+      }
+
+      function setPlatform(p) {
+        state.platform = p;
+        $("tab-apple").setAttribute("aria-pressed", String(p === "apple"));
+        $("tab-spotify").setAttribute("aria-pressed", String(p === "spotify"));
+        if (state.latest) render();
+      }
+
+      function showEmpty(msg) {
+        $("updated").textContent = "";
+        $("content").innerHTML =
+          "<section class='card'><div class='empty'>" + msg + "</div></section>";
+      }
+
+      async function load() {
+        $("updated").textContent = "Loading…";
+        let payload;
+        try {
+          const res = await fetch("/api/latest");
+          if (res.status === 404) {
+            showEmpty("No runs yet. Trigger a collection (POST <code>/api/collect</code>) or wait for the weekly schedule.");
+            return;
+          }
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          payload = await res.json();
+        } catch (err) {
+          showEmpty("Couldn't load data: " + escapeHtml(String(err)) + ".");
+          return;
+        }
+        state.latest = payload.latest;
+        state.previousRunAt = payload.previousRunAt;
+
+        const showName = (payload.show && payload.show.name) || "Podcast Rank Tracker";
+        state.latest._showName = showName;
+        $("show-name").textContent = showName;
+        document.title = showName + " — Rank Tracker";
+
+        const keywords = keywordList();
+
+        await Promise.all(
+          keywords.map(async (k) => {
+            try {
+              const r = await fetch("/api/history?keyword=" + encodeURIComponent(k));
+              state.history[k] = r.ok ? await r.json() : { apple: [], spotify: [] };
+            } catch {
+              state.history[k] = { apple: [], spotify: [] };
+            }
+          })
+        );
+
+        const when = new Date(state.latest.runAt);
+        $("updated").textContent =
+          "Last updated " + when.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+        render();
+      }
+
+      $("tab-apple").addEventListener("click", () => setPlatform("apple"));
+      $("tab-spotify").addEventListener("click", () => setPlatform("spotify"));
+      $("refresh").addEventListener("click", load);
+      load();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+# Netlify config for the Podcast Rank Tracker.
+#
+# This project lives in the `rank-tracker/` subfolder of the repo. When you
+# create the Netlify site, set the site's **Base directory** to `rank-tracker`
+# so Netlify reads this file and installs dependencies from this folder.
+# All paths below are relative to that base directory.
+
+[build]
+  publish = "public"
+  command = ""
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+  # Bundle the config file with every function so `config/keywords.json` is
+  # readable at runtime.
+  included_files = ["config/keywords.json"]
+
+# Routing note:
+#   - The dashboard is served from `public/` at the site root.
+#   - /api/*        -> netlify/functions/api.ts   (declared via its config.path)
+#   - /validate     -> netlify/functions/validate.ts
+#   - /resolve-ids  -> netlify/functions/resolve-ids.ts
+#   - Scheduling for collect.ts is declared in the function file via
+#     `export const config = { schedule: "0 12 * * 2" }` (Tuesdays 12:00 UTC).
+# No manual redirects needed — each function declares its own path.
